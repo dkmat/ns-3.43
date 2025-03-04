@@ -17,11 +17,12 @@ main(int argc, char *argv[])
 {
     LogComponentEnable("Lab3Part1", LOG_LEVEL_INFO);
     std::string mobilityType = "walk";
-    uint32_t nNodes = 5;
+    uint32_t nNodes = 400;
     double duration = 400.0;
     double minSpeed = 2.0;
     double maxSpeed = 6.0;
     double pause = 2.0;
+    uint32_t seed = 0;
     CommandLine cmd(__FILE__);
     cmd.AddValue("mobilityType", "Type of mobility model: walk or way or direction", mobilityType);
     cmd.AddValue("nNodes", "Number of nodes", nNodes);
@@ -29,13 +30,14 @@ main(int argc, char *argv[])
     cmd.AddValue("minSpeed", "Minimum speed of nodes", minSpeed);
     cmd.AddValue("maxSpeed", "Maximum speed of nodes", maxSpeed);
     cmd.AddValue("pause", "Pause time of nodes", pause);
+    cmd.AddValue("seed", "Random number seed", seed);
     cmd.Parse(argc, argv);
 
     NodeContainer nodes;
     nodes.Create(nNodes);
     InternetStackHelper stack;
     stack.Install(nodes);
-
+    RngSeedManager::SetSeed(seed);
     MobilityHelper mobility;
     ObjectFactory pos;
     pos.SetTypeId("ns3::RandomRectanglePositionAllocator");
