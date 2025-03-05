@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 # Read node positions from the file
 positions = []
-with open("node-positions-walk.txt", "r") as file:
+with open("empty-cells-direction-4616.txt", "r") as file:
     for line in file:
         x, y = map(float, line.strip().split())
         positions.append((x, y))
@@ -20,6 +20,6 @@ plt.axvline(0, color="gray", linestyle="--", linewidth=0.5)
 plt.grid(True, linestyle="--", linewidth=0.5)
 plt.xlabel("X Position")
 plt.ylabel("Y Position")
-plt.title("Final Positions of 100 Nodes")
+plt.title("Final Positions of 400 Nodes")
 plt.legend()
 plt.show()

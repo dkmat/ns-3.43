@@ -92,7 +92,10 @@ main(int argc, char *argv[])
         Vector pos = mobilityMod->GetPosition();
         int cellX = static_cast<int>((pos.x + 50.0) / cellSize);
         int cellY = static_cast<int>((pos.y + 50.0) / cellSize);
-        occupiedCells.insert({cellX, cellY});
+        if(cellX >= 0 && cellX <= 20 && cellY >= 0 && cellY <= 20)
+        {
+            occupiedCells.insert({cellX, cellY});
+        }
         outputFile << pos.x << " " << pos.y << std::endl;
     }
     outputFile.close();
