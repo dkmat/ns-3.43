@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <cmath>
+#include <set>
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Lab3Part1");
@@ -80,24 +80,26 @@ main(int argc, char *argv[])
     Simulator::Stop(Seconds(duration));
     Simulator::Run();
 
-    double centerX = 0.0;
-    double centerY = 0.0;
-    double totalDistance = 0;
-
-    std::ofstream outputFile("node-positions-" + mobilityType + ".txt");
+    double cellSize = 5.0;
+    uint32_t gridRows = 100.0 / cellSize;
+    uint32_t gridCols = 100.0 / cellSize;
+    std::set<std::pair<int, int>> occupiedCells;
+    std::ofstream outputFile("empty-cells-" + mobilityType + "-" + std::to_string(seed) + ".txt");
     for (uint32_t i = 0; i < nNodes; i++)
     {
+
         Ptr<MobilityModel> mobilityMod = nodes.Get(i)->GetObject<MobilityModel>();
         Vector pos = mobilityMod->GetPosition();
-        double distance = std::sqrt(std::pow(centerX - pos.x, 2) + std::pow(centerY - pos.y, 2));
-        totalDistance += distance;
+        int cellX = static_cast<int>((pos.x + 50.0) / cellSize);
+        int cellY = static_cast<int>((pos.y + 50.0) / cellSize);
+        occupiedCells.insert({cellX, cellY});
         outputFile << pos.x << " " << pos.y << std::endl;
     }
     outputFile.close();
+    uint32_t totalCells = gridRows * gridCols;
+    uint32_t emptyCells = totalCells - occupiedCells.size();
 
-    double avgDistance = totalDistance / nNodes;
-    NS_LOG_INFO("Average distance from center: " << avgDistance);
-
+    NS_LOG_INFO("Empty cells: " << emptyCells);
     Simulator::Destroy();
     return 0;
 }
