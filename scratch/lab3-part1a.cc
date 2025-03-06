@@ -10,12 +10,12 @@
 #include <cmath>
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("Lab3Part1");
+NS_LOG_COMPONENT_DEFINE("Lab3Part1a");
 
 int
 main(int argc, char *argv[])
 {
-    LogComponentEnable("Lab3Part1", LOG_LEVEL_INFO);
+    LogComponentEnable("Lab3Part1a", LOG_LEVEL_INFO);
     std::string mobilityType = "walk";
     uint32_t nNodes = 5;
     double duration = 400.0;
