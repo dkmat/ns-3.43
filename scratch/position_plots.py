@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 # Read node positions from the file
 positions = []
-with open("empty-cells-direction-4616.txt", "r") as file:
+with open("empty-cells-way-13.txt", "r") as file:
     for line in file:
         x, y = map(float, line.strip().split())
         positions.append((x, y))

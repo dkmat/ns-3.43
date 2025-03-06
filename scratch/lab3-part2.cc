@@ -9,12 +9,12 @@
 #include <cmath>
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("Lab3Part1b");
+NS_LOG_COMPONENT_DEFINE("Lab3Part2");
 
 int
 main(int argc, char *argv[])
 {
-    LogComponentEnable("Lab3Part1b", LOG_LEVEL_INFO);
+    LogComponentEnable("Lab3Part2", LOG_LEVEL_INFO);
     uint32_t nNodes = 200;
     double duration = 400.0;
     double minSpeed = 0.0;
