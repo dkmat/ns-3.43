@@ -21,11 +21,7 @@ main(int argc, char *argv[])
     double maxSpeed = 20.0;
     double pause = 2.0;
     CommandLine cmd(__FILE__);
-    cmd.AddValue("nNodes", "Number of nodes", nNodes);
-    cmd.AddValue("duration", "Duration of simulation", duration);
     cmd.AddValue("minSpeed", "Minimum speed of nodes", minSpeed);
-    cmd.AddValue("maxSpeed", "Maximum speed of nodes", maxSpeed);
-    cmd.AddValue("pause", "Pause time of nodes", pause);
     cmd.Parse(argc, argv);
     NodeContainer nodes;
     nodes.Create(nNodes);
