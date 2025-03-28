@@ -17,13 +17,50 @@
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Lab4Part1");
-double interval = 1.0;
+double interval = 2.0;
+// double lastLinkRate = 0.0;
+void
+RateCallback(uint64_t oldRate, uint64_t newRate)
+{
+    std::cout << "Rate " << newRate / 1e6 << " Mbps";
+}
+
+void moveStation(Vector pos, uint32_t step, Ptr<Node> stNode)
+{
+    Ptr<MobilityModel> mobility =stNode->GetObject<MobilityModel>();
+    mobility->SetPosition(pos);
+
+    Ptr<MobilityModel> apMobility = NodeList::GetNode(1)->GetObject<MobilityModel>();
+    double distance = CalculateDistance(pos, apMobility->GetPosition());
+
+    std::cout << "Time: " << Simulator::Now().GetSeconds() << "s, "
+            << "Station Location: (" << pos.x << "," << pos.y << "," << pos.z << ") "
+            << "Distance: " << distance << "m " << std::endl;
+            // << "Link Rate: " << lastLinkRate<< " Mbps" << std::endl;
+
+    Vector nextPos = pos;
+    if (pos.y < 20)
+    {
+        nextPos.x += step;
+        nextPos.y += step;
+
+    }
+    else if(pos.x < 65)
+    {
+        nextPos.x += step;
+    }
+    else
+    {
+        return;
+    }
+    Simulator::Schedule(Seconds(interval), &moveStation, nextPos, step, stNode);
+}
 
 int
 main(int argc, char *argv[])
 {
     LogComponentEnable("Lab4Part1", LOG_LEVEL_INFO);
-    double exponent = 2.0;
+    double exponent = 2.5;
     
     CommandLine cmd(__FILE__);
     cmd.AddValue("exponent", "Path loss exponent for LogDistance model", exponent);
@@ -32,33 +69,35 @@ main(int argc, char *argv[])
     NodeContainer stNode, apNode;
     stNode.Create(1);
     apNode.Create(1);
-
+    SpectrumWifiPhyHelper phy;
     SpectrumChannelHelper spectrumChannelHelper;
     spectrumChannelHelper.SetChannel("ns3::MultiModelSpectrumChannel");
+    spectrumChannelHelper.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
     spectrumChannelHelper.AddPropagationLoss("ns3::LogDistancePropagationLossModel", "Exponent", DoubleValue(exponent));
     Ptr<SpectrumChannel> spectrumChannel = spectrumChannelHelper.Create();
-
-    SpectrumWifiPhyHelper phy;
+    
     phy.SetChannel(spectrumChannel);
-    phy.Set("ChannelSettings",StringValue("{0, 20, BAND_UNSPECIFIED, 0}"));
+    phy.SetErrorRateModel("ns3::NistErrorRateModel");
     phy.Set("TxPowerStart", DoubleValue(20.0));
     phy.Set("TxPowerEnd", DoubleValue(20.0));
+    phy.Set("ChannelSettings",StringValue("{0, 20, BAND_UNSPECIFIED, 0}"));
 
     WifiHelper wifi;
     wifi.SetStandard(WIFI_STANDARD_80211ac);
-    wifi.SetRemoteStationManager("ns3::MinstrelHtWifiManager");
+    wifi.SetRemoteStationManager("ns3::MinstrelHtWifiManager","RtsCtsThreshold", UintegerValue(65535));
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid("ns3-80211ac");
-    NetDeviceContainer stDevice, apDevice;
-    mac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid), "ActiveProbing", BooleanValue(false));
-    stDevice = wifi.Install(phy, mac, stNode);
-
+    Ssid ssid = Ssid("station");
+    NetDeviceContainer stDevice, apDevice, wifiDevice;
+    mac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid));
+    stDevice.Add(wifi.Install(phy, mac, stNode.Get(0)));
+    ssid = Ssid("ap");
     mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid));
-    apDevice = wifi.Install(phy, mac, apNode);
+    apDevice.Add(wifi.Install(phy, mac, apNode.Get(0)));
 
+    wifiDevice.Add(stDevice);
+    wifiDevice.Add(apDevice);
     MobilityHelper mobility;
-    mobility.SetPositionAllocator("ns3::GridPositionAllocator", "MinX", DoubleValue(0.0), "MinY", DoubleValue(0.0));
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobility.Install(stNode);
     mobility.Install(apNode);
@@ -72,18 +111,23 @@ main(int argc, char *argv[])
     Ipv4InterfaceContainer stInterface = address.Assign(stDevice);
     Ipv4InterfaceContainer apInterface = address.Assign(apDevice);
 
-    uint16_t port = 9;
+    uint16_t port = 5000;
     OnOffHelper onoff("ns3::UdpSocketFactory", InetSocketAddress(stInterface.GetAddress(0), port));
     onoff.SetConstantRate(DataRate("400Mbps"), 1024);
     ApplicationContainer app = onoff.Install(apNode.Get(0));
-    app.Start(Seconds(1.0));
+    app.Start(Seconds(2.0));
     app.Stop(Seconds(10.0));
 
     PacketSinkHelper sink("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port));
     ApplicationContainer sinkApp = sink.Install(stNode.Get(0));
-    sinkApp.Start(Seconds(1.0));
+    sinkApp.Start(Seconds(2.0));
     sinkApp.Stop(Seconds(10.0));
 
+    Config::ConnectWithoutContext(
+        "/NodeList/0/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$ns3::MinstrelHtWifiManager/Rate",
+        MakeCallback(&RateCallback));
+    Simulator::Schedule(Seconds(interval), &moveStation, Vector(10, 0, 1), 5, stNode.Get(0));
+    Simulator::Stop(Seconds(30.0));
     Simulator::Run();
     Simulator::Destroy();
     return 0;
