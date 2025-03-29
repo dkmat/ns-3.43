@@ -17,12 +17,13 @@
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("Lab4Part1");
-double interval = 2.0;
-// double lastLinkRate = 0.0;
+double interval = 1.0;
+double lastLinkRate = 0.0;
 void
 RateCallback(uint64_t oldRate, uint64_t newRate)
 {
-    std::cout << "Rate " << newRate / 1e6 << " Mbps";
+    std::cout << "Rate " << newRate / 1e6 << " Mbps" << std::endl;
+    lastLinkRate = newRate / 1e6;
 }
 
 void moveStation(Vector pos, uint32_t step, Ptr<Node> stNode)
@@ -35,8 +36,8 @@ void moveStation(Vector pos, uint32_t step, Ptr<Node> stNode)
 
     std::cout << "Time: " << Simulator::Now().GetSeconds() << "s, "
             << "Station Location: (" << pos.x << "," << pos.y << "," << pos.z << ") "
-            << "Distance: " << distance << "m " << std::endl;
-            // << "Link Rate: " << lastLinkRate<< " Mbps" << std::endl;
+            << "Distance: " << distance << "m "
+            << "Link Rate: " << lastLinkRate << " Mbps" << std::endl;
 
     Vector nextPos = pos;
     if (pos.y < 20)
@@ -87,7 +88,7 @@ main(int argc, char *argv[])
     wifi.SetRemoteStationManager("ns3::MinstrelHtWifiManager","RtsCtsThreshold", UintegerValue(65535));
 
     WifiMacHelper mac;
-    Ssid ssid = Ssid("station");
+    Ssid ssid = Ssid("ap");
     NetDeviceContainer stDevice, apDevice, wifiDevice;
     mac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid));
     stDevice.Add(wifi.Install(phy, mac, stNode.Get(0)));
@@ -102,30 +103,34 @@ main(int argc, char *argv[])
     mobility.Install(stNode);
     mobility.Install(apNode);
 
+    Ptr<MobilityModel> apMobility = apNode.Get(0)->GetObject<MobilityModel>();
+    apMobility->SetPosition(Vector(0, 0, 4));
     InternetStackHelper stack;
     stack.Install(stNode);
     stack.Install(apNode);
 
     Ipv4AddressHelper address;
     address.SetBase("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer stInterface = address.Assign(stDevice);
-    Ipv4InterfaceContainer apInterface = address.Assign(apDevice);
+    // Ipv4InterfaceContainer stInterface = address.Assign(stDevice);
+    // Ipv4InterfaceContainer apInterface = address.Assign(apDevice);
+    Ipv4InterfaceContainer w = address.Assign(wifiDevice);
+    Ipv4Address sinkAddress = w.GetAddress(0);
 
-    uint16_t port = 5000;
-    OnOffHelper onoff("ns3::UdpSocketFactory", InetSocketAddress(stInterface.GetAddress(0), port));
+    uint16_t port = 9;
+    OnOffHelper onoff("ns3::UdpSocketFactory", InetSocketAddress(sinkAddress, port));
     onoff.SetConstantRate(DataRate("400Mbps"), 1024);
+    onoff.SetAttribute("StartTime", TimeValue(Seconds(0.1)));
+    onoff.SetAttribute("StopTime", TimeValue(Seconds(30.0)));
     ApplicationContainer app = onoff.Install(apNode.Get(0));
-    app.Start(Seconds(2.0));
-    app.Stop(Seconds(10.0));
 
-    PacketSinkHelper sink("ns3::UdpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port));
+    PacketSinkHelper sink("ns3::UdpSocketFactory", InetSocketAddress(sinkAddress, port));
     ApplicationContainer sinkApp = sink.Install(stNode.Get(0));
-    sinkApp.Start(Seconds(2.0));
-    sinkApp.Stop(Seconds(10.0));
+    sinkApp.Start(Seconds(0.1));
+    sinkApp.Stop(Seconds(30.0));
 
     Config::ConnectWithoutContext(
-        "/NodeList/0/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$ns3::MinstrelHtWifiManager/Rate",
-        MakeCallback(&RateCallback));
+        "/NodeList/1/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$ns3::MinstrelHtWifiManager/Rate",
+        MakeCallback(RateCallback));
     Simulator::Schedule(Seconds(interval), &moveStation, Vector(10, 0, 1), 5, stNode.Get(0));
     Simulator::Stop(Seconds(30.0));
     Simulator::Run();
