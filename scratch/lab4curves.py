@@ -33,7 +33,7 @@ plt.figure(figsize=(10, 6))
 
 for n in n_values:
     measured_powers = measured_received_power(n, distances)
-    plt.scatter(distances, measured_powers, label=f'Path Loss Exponent = {n}', marker = 'o')
+    plt.plot(distances, measured_powers, label=f'Theoretical Path Loss Exponent = {n}')
 
 SNR_values = {
     2.5: [25,29,29,29,29,29,25,25,25,25,20,20],
@@ -43,7 +43,7 @@ SNR_values = {
 
 for n in n_values:
     theoretical_powers = [theoretical_received_power(SNR, Pn) for SNR in SNR_values[n]]
-    plt.plot(distances, theoretical_powers, label=f'Theoretical SNR received power (n={n})')
+    plt.scatter(distances, theoretical_powers, label=f'Measured SNR received power (n={n})', marker= 'o')
 # Labels and legend
 plt.title('Received Power vs. Distance (Log-Distance Path Loss Model)')
 plt.xlabel('Distance (m)')

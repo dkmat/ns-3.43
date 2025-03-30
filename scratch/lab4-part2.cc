@@ -16,7 +16,7 @@
 #include <iostream>
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("Lab4Part1");
+NS_LOG_COMPONENT_DEFINE("Lab4Part2");
 double interval = 1.0;
 double lastLinkRate = 0.0;
 int nPackets = 0;
@@ -47,7 +47,7 @@ void moveStation(Vector pos, uint32_t step, Ptr<Node> stNode)
     {
         totalBytesReceived = packetSink->GetTotalRx();
     }
-    double goodput = ((totalBytesReceived  - prevBytesReceived)* 8.0) / 1e6; // Convert bytes to Mbps
+    double goodput = ((totalBytesReceived  - prevBytesReceived)* 8.0) / 1e6;
     prevBytesReceived = totalBytesReceived - prevBytesReceived;
     totalBytesReceived = 0;
     std::cout << "Time: " << Simulator::Now().GetSeconds() << "s, "
@@ -80,7 +80,7 @@ void moveStation(Vector pos, uint32_t step, Ptr<Node> stNode)
 int
 main(int argc, char *argv[])
 {
-    LogComponentEnable("Lab4Part1", LOG_LEVEL_INFO);
+    LogComponentEnable("Lab4Part2", LOG_LEVEL_INFO);
     double exponent = 2.5;
     
     CommandLine cmd(__FILE__);

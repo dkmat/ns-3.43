@@ -113,8 +113,6 @@ main(int argc, char *argv[])
 
     Ipv4AddressHelper address;
     address.SetBase("10.1.1.0", "255.255.255.0");
-    // Ipv4InterfaceContainer stInterface = address.Assign(stDevice);
-    // Ipv4InterfaceContainer apInterface = address.Assign(apDevice);
     Ipv4InterfaceContainer w = address.Assign(wifiDevice);
     Ipv4Address sinkAddress = w.GetAddress(0);
 
