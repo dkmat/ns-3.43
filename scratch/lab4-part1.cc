@@ -105,6 +105,8 @@ main(int argc, char *argv[])
 
     Ptr<MobilityModel> apMobility = apNode.Get(0)->GetObject<MobilityModel>();
     apMobility->SetPosition(Vector(0, 0, 4));
+    Ptr<MobilityModel> stMobility = stNode.Get(0)->GetObject<MobilityModel>();
+    stMobility->SetPosition(Vector(10, 0, 1));
     InternetStackHelper stack;
     stack.Install(stNode);
     stack.Install(apNode);
@@ -131,7 +133,7 @@ main(int argc, char *argv[])
     Config::ConnectWithoutContext(
         "/NodeList/1/DeviceList/*/$ns3::WifiNetDevice/RemoteStationManager/$ns3::MinstrelHtWifiManager/Rate",
         MakeCallback(RateCallback));
-    Simulator::Schedule(Seconds(interval), &moveStation, Vector(10, 0, 1), 5, stNode.Get(0));
+    Simulator::Schedule(Seconds(0.5 + interval), &moveStation, Vector(10, 0, 1), 5, stNode.Get(0));
     Simulator::Stop(Seconds(30.0));
     Simulator::Run();
     Simulator::Destroy();
